@@ -56,7 +56,6 @@ export const signin =  async(req, res) => {
 
 export const signup = async (req, res) => {
     const { email, fname, lname, } = req.body;
-    
     try {
         const existingUser = await CounterStaff.findOne({ email });
 

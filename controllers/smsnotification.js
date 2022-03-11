@@ -10,7 +10,7 @@ client.messages
       .create({         
          to: '+639774539951',
          body: "You're Next on your Queue! Be ready! Be alert!",
-         messagingServiceSid: messagingServiceSid,
+        //  messagingServiceSid: messagingServiceSid,
        }) 
       .then(() => console.log('Message sent!')) 
       .done()

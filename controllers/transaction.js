@@ -256,7 +256,7 @@ export const queuingComplete = async (req, res) => {
                 .create({         
                 to: contact,
                 body: "YOU'RE NEXT! PLEASE BE READY. Be alert!",
-                messagingServiceSid: messagingServiceSid,
+                // messagingServiceSid: messagingServiceSid,
                 }) 
                 .then(() => console.log('Message sent!')) 
                 .catch((err) => console.log(err));
