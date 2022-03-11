@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 
 import CounterStaff from '../models/counterStaff.js';
 import Counter from '../models/counter.js';
+import transporter from '../helpers/emailTransportot.js';
 
 // For send grid transport
 // const transporter = nodemailer.createTransport(sendgridTransport({
@@ -14,16 +15,16 @@ import Counter from '../models/counter.js';
 // }))
 
 // For send grid transport
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: "trylang721@gmail.com", // generated ethereal user
-      pass: "123456A/", // generated ethereal password
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-  });
+// const transporter = nodemailer.createTransport({
+//     service: "gmail",
+//     auth: {
+//       user: "trylang721@gmail.com", // generated ethereal user
+//       pass: "123456A/", // generated ethereal password
+//     },
+//     tls: {
+//         rejectUnauthorized: false
+//     }
+//   });
     
 export const signin =  async(req, res) => {
     const { username, password, service, counterno } = req.body;
@@ -74,7 +75,7 @@ export const signup = async (req, res) => {
 
         transporter.sendMail({
             to: email,
-            from:"noreplybankit21@gmail.com",
+            from:"umadahmad1928@gmail.com",
             subject:"QueSoft - Account Created",
             html:
             `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">

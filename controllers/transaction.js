@@ -23,16 +23,7 @@ const client = twilio(accountSid, authToken);
 // Email notification
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: "trylang721@gmail.com", // generated ethereal user
-      pass: "123456A/", // generated ethereal password
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-  });
+import transporter from '../helpers/emailTransportot.js'
 
 export const getTransactions =  async(req, res) => {
     try {

@@ -26,8 +26,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // mongodump
 
 const DB_NAME = 'queuing_system'
-const DB_PASSWORD = 'jaylawrence_23'
-const CONNECTION_STRING = 'mongodb+srv://jaylawrence@queuing-system.gbdf3.mongodb.net/queuing_system'
 const ARCHIVE_PATH = path.join(__dirname, 'public', `${DB_NAME}.gzip`)
 
 // backup database every 24 hrs
