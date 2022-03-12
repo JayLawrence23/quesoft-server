@@ -23,7 +23,7 @@ const client = twilio(accountSid, authToken);
 // Email notification
 import nodemailer from 'nodemailer';
 
-import transporter from '../helpers/emailTransportot.js'
+import {sgMail} from '../helpers/emailTransportot.js'
 
 export const getTransactions =  async(req, res) => {
     try {
@@ -54,15 +54,24 @@ export const createTransaction = async (req, res) => {
     try {
 
         const getService = await Service.findOne( { servName: service });
-        
-        getService.ticketNo.push(ticketNo);
-        getService.queuingTic.push(ticketNo);
+        console.log('getService', getService.ticketNo)
+         let ticketLength =
+           getService.ticketNo && getService.ticketNo.length + 1;
+         let currentTicketNo = getService.prefix + '-0' + ticketLength;
+         console.log('currentTicketNo', currentTicketNo);
 
-        const index = getService.queuingTic.findIndex((ticketno) => ticketno === String(ticketNo));
+        getService.ticketNo.push(currentTicketNo);
+        getService.queuingTic.push(currentTicketNo);
+        await getService.save();
 
-        const newTransaction = await Transaction.create({ code: code, service: service, ticketNo: ticketNo, predWait: index, business: business, tags: getService.tags });
+        const index = getService.queuingTic.findIndex((ticketno) => ticketno === String(currentTicketNo));
 
-        await Service.findByIdAndUpdate(getService._id, getService, { new: true })
+        const newTransaction = await Transaction.create({ code: code, service: service, ticketNo: currentTicketNo, predWait: index, business: business, tags: getService.tags });
+
+        console.log()
+        console.log()
+        console.log()
+        // await Service.findByIdAndUpdate(getService._id, getService, { new: true })
 
         //Socket IO for real-time
         io.emit('generateticket', newTransaction);
@@ -125,11 +134,13 @@ export const callCustomer = async (req, res) => {
     // const allTransaction = await Transaction.find();
 
     // console.log(allTransaction.predWait)
- 
+ console.log('frontTicketNo', frontTicketNo)
     if(!frontTicketNo){
         updatedTransaction = null;
     } else {
         const ticket = await Transaction.findOne({ status: "Waiting", ticketNo: frontTicketNo })
+
+        if (!ticket) return res.status(400).json(updatedTransaction);
 
         updatedTransaction = await Transaction.findByIdAndUpdate(ticket._id, { status: "Calling", counterName: counterNo, calledTime: today }, { new: true } )
         getService.queuingTic.shift();
@@ -150,7 +161,7 @@ export const callCustomer = async (req, res) => {
         await Service.findByIdAndUpdate(getService._id, getService, { new: true });
     }
    
-    res.json(updatedTransaction);
+    res.status(200).json(updatedTransaction);
 
     //Socket IO for real-time
     // io.emit('queuing', updatedTransaction)
@@ -250,6 +261,7 @@ export const queuingComplete = async (req, res) => {
 
         // const updatedPredwait = Transaction.find({ service: service, status: "Waiting" })
 
+        console.log('notificationsForEmail', notificationsForEmail.length)
         notificationsForSMS.forEach(({ predWait, ticketNo, contact, status }) => {
             if(predWait === 1 && status === "Waiting"){
                 client.messages 
@@ -287,73 +299,74 @@ export const queuingComplete = async (req, res) => {
             }
         })
 
-        notificationsForEmail.forEach(({ predWait, ticketNo, email, status }) => {
-                if(predWait === 1 && status === "Waiting"){
-                    transporter.sendMail({
-                        to: email,
-                        from:"noreplybankit21@gmail.com",
-                        subject:`${ ticketNo } - YOU'RE NEXT! PLEASE BE READY.`,
-                        html:
-                        `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
+        notificationsForEmail.forEach(
+          ({ predWait, ticketNo, email, status }) => {
+              console.log('predWait', predWait)
+            if (predWait === 1 && status === 'Waiting') {
+              sgMail
+                .send({
+                  to: email,
+                  from: process.env.SENDGRID_Email_From,
+                  subject: `${ticketNo} - YOU'RE NEXT! PLEASE BE READY.`,
+                  html: `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
                         <h2 style="text-align: center; text-transform: uppercase;color: orange;">BE READY, YOU'RE NEXT!</h2>
-                        </div>`
-                    
-                    }, function(err, info){
-                        if (err ){
-                          console.log(err);
-                        }
-                        else {
-                          console.log('Message sent: ' + info.res);
-                        }
-                    });
-            
-                }
-                if(predWait === 2 && status === "Waiting"){
-                    transporter.sendMail({
-                        to: email,
-                        from:"noreplybankit21@gmail.com",
-                        subject:`${ ticketNo } - YOUR LINE IS NEAR, GET READY`,
-                        html:
-                        `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
+                        </div>`,
+                })
+                .then((res) => {
+                  //    console.log('res', res)
+                  console.log('email sent');
+                })
+                .catch((err) => {
+                  console.log('err sending email', err);
+                });
+            }
+            if (predWait === 2 && status === 'Waiting') {
+              sgMail.send(
+                {
+                  to: email,
+                  from: process.env.SENDGRID_Email_From,
+                  subject: `${ticketNo} - YOUR LINE IS NEAR, GET READY`,
+                  html: `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
                         <h2 style="text-align: center; text-transform: uppercase;color: orange;">STAY ALERT! GET READY</h2>
-                        </div>`
-                    
-                    }, function(err, info){
-                        if (err ){
-                          console.log(err);
-                        }
-                        else {
-                          console.log('Message sent: ' + info.res);
-                        }
-                    });
-                    console.log("MAKE SURE MALAPIT KA NA! "+ ticketNo)
+                        </div>`,
+                },
+                function (err, info) {
+                  if (err) {
+                    console.log(err);
+                  } else {
+                    console.log('Message sent: ' + info.res);
+                  }
                 }
-                if(status === "Calling" ){
-                    transporter.sendMail({
-                        to: email,
-                        from:"noreplybankit21@gmail.com",
-                        subject:`${ ticketNo } - IT'S YOUR TURN, PLEASE GO TO THE COUNTER`,
-                        html:
-                        `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
+              );
+              console.log('MAKE SURE MALAPIT KA NA! ' + ticketNo);
+            }
+            if (status === 'Calling') {
+              sgMail.send(
+                {
+                  to: email,
+                  from: process.env.SENDGRID_Email_From,
+                  subject: `${ticketNo} - IT'S YOUR TURN, PLEASE GO TO THE COUNTER`,
+                  html: `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
                         <h2 style="text-align: center; text-transform: uppercase;color: orange;">It's your turn, please go to the counter</h2>
                         <h5>
                         </h5>
-                        </div>`
-                    
-                    }, function(err, info){
-                        if (err ){
-                          console.log(err);
-                        }
-                        else {
-                          console.log('Message sent: ' + info.res);
-                        }
-                    });
-                    console.log("dalian mo tinatawag ka na! "+ ticketNo)
+                        </div>`,
+                },
+                function (err, info) {
+                  if (err) {
+                    console.log(err);
+                  } else {
+                    console.log('Message sent: ' + info.res);
+                  }
                 }
-        })
+              );
+              console.log('dalian mo tinatawag ka na! ' + ticketNo);
+            }
+          }
+        );
 
         // Socket IO for real-time
-        io.emit('complete', updatedTransaction)
+        io.sockets.emit('complete', updatedTransaction)
 
         res.status(200).json(updatedTransaction);
     

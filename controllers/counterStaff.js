@@ -2,11 +2,11 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import nodemailer from 'nodemailer';
-
+import dotenv from 'dotenv';
 import CounterStaff from '../models/counterStaff.js';
 import Counter from '../models/counter.js';
-import transporter from '../helpers/emailTransportot.js';
-
+import { sgMail } from '../helpers/emailTransportot.js';
+dotenv.config();
 // For send grid transport
 // const transporter = nodemailer.createTransport(sendgridTransport({
 //     auth:{
@@ -25,59 +25,85 @@ import transporter from '../helpers/emailTransportot.js';
 //         rejectUnauthorized: false
 //     }
 //   });
-    
-export const signin =  async(req, res) => {
-    const { username, password, service, counterno } = req.body;
 
-    try {
-        const existingUser = await CounterStaff.findOne({ username });
+export const signin = async (req, res) => {
+  const { username, password, service, counterno } = req.body;
 
-        if(!existingUser) return res.status(404).json({ message: "User doesn't exist. "})
+  try {
+    const existingUser = await CounterStaff.findOne({ username });
 
-        const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
+    if (!existingUser)
+      return res.status(404).json({ message: "User doesn't exist. " });
 
-        if(!isPasswordCorrect) return res.status(404).json({ message: "Invalid credentials. "})
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      existingUser.password
+    );
 
-        const token = jwt.sign({ username: existingUser.username, id: existingUser._id}, 'test', { expiresIn: "12h" })
+    if (!isPasswordCorrect)
+      return res.status(404).json({ message: 'Invalid credentials. ' });
 
-        const updatedCounterStaff = await CounterStaff.findByIdAndUpdate(existingUser._id, { curService: service, curCounter: counterno }, { new: true });
+    const token = jwt.sign(
+      { username: existingUser.username, id: existingUser._id },
+      'test',
+      { expiresIn: '12h' }
+    );
 
-        const counterFind = await Counter.findOne({ service: service, cName: counterno });
+    const updatedCounterStaff = await CounterStaff.findByIdAndUpdate(
+      existingUser._id,
+      { curService: service, curCounter: counterno },
+      { new: true }
+    );
 
-        await Counter.findByIdAndUpdate(counterFind._id, { status: true, curStaffName: username }, { new: true });
-        
-        res.status(200).json({ result: existingUser, updatedCounterStaff, token})
-        
+    const counterFind = await Counter.findOne({
+      service: service,
+      cName: counterno,
+    });
 
-    } catch (error) {
-        res.status(500).json( {message: "Something went wrong. "});
-    }
-}
+    await Counter.findByIdAndUpdate(
+      counterFind._id,
+      { status: true, curStaffName: username },
+      { new: true }
+    );
+
+    res.status(200).json({ result: existingUser, updatedCounterStaff, token });
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong. ' });
+  }
+};
 
 export const signup = async (req, res) => {
-    const { email, fname, lname, } = req.body;
-    try {
-        const existingUser = await CounterStaff.findOne({ email });
+  const { email, fname, lname } = req.body;
+  try {
+    const existingUser = await CounterStaff.findOne({ email });
 
-        if(existingUser) return res.status(400).json({ message: "User already exist. "})
+    if (existingUser)
+      return res.status(400).json({ message: 'User already exist. ' });
 
-        let code = Math.random().toString(36).slice(2);
+    let code = Math.random().toString(36).slice(2);
 
-        const hashedPassword = await bcrypt.hash(code, 12);
+    const hashedPassword = await bcrypt.hash(code, 12);
 
-        const username = fname.charAt(0)+fname.charAt(1)+""+ lname;
-        const lowcaseUsername = username.toLowerCase();
+    const username = fname.charAt(0) + fname.charAt(1) + '' + lname;
+    const lowcaseUsername = username.toLowerCase();
 
-        const result = await CounterStaff.create({ fname: fname, lname: lname, username: lowcaseUsername, email: email, password: hashedPassword})
+    const result = await CounterStaff.create({
+      fname: fname,
+      lname: lname,
+      username: lowcaseUsername,
+      email: email,
+      password: hashedPassword,
+    });
 
-        // sendMailCounterStaff(email, username, "1234", "http://localhost:3000/queuing-system/counterstaff/auth", "Login Now")
+    // sendMailCounterStaff(email, username, "1234", "http://localhost:3000/queuing-system/counterstaff/auth", "Login Now")
 
-        transporter.sendMail({
-            to: email,
-            from:"umadahmad1928@gmail.com",
-            subject:"QueSoft - Account Created",
-            html:
-            `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
+    console.log('sending message');
+    sgMail
+      .send({
+        from: process.env.SENDGRID_Email_From,
+        to: email,
+        subject: 'Account Created on Quesoft!',
+        html: `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
             <h2 style="text-align: center; text-transform: uppercase;color: orange;">QueSoft Queuing System</h2>
             <h5>Your account has been created.
             </h5>
@@ -87,105 +113,145 @@ export const signup = async (req, res) => {
     
         
             <div></div>
-            </div>`
-        
-        }, function(err, info){
-            if (err ){
-              console.log(err);
-            }
-            else {
-              console.log('Message sent: ' + info.res);
-            }
-        });
+            </div>`,
+      })
+      .then((res) => {
+        console.log('email send', res);
+      })
+      .catch((err) => {
+        console.log('err', err);
+      });
+    // transporter.sendMail({
+    //     to: email,
+    //     from:"umadahmad1928@gmail.com",
+    //     subject:"QueSoft - Account Created",
+    //     html:
+    //     `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
+    //     <h2 style="text-align: center; text-transform: uppercase;color: orange;">QueSoft Queuing System</h2>
+    //     <h5>Your account has been created.
+    //     </h5>
+    //     <p>To access your account, here's your credentials: <br/>Email: ${email} <br/> Username: ${lowcaseUsername} <br/> Password: ${code} </p>
+    //     <p>Click the button below to access login page of Quesoft. </>
+    //     <a href=${process.env.CLIENT_URL}counterstaff/auth style="background: #FFA500; text-decoration: none; color: white; padding: 10px 20px; margin: 10px 0; display: inline-block;">LOGIN</a>
 
-        res.status(200).json({ result });
+    //     <div></div>
+    //     </div>`
 
-    } catch (error) {
-        res.status(500).json( {message: "Something went wrong. "});
-    }
-}
+    // }, function(err, info){
+    //     if (err ){
+    //       console.log(err);
+    //     }
+    //     else {
+    //       console.log('Message sent: ' + info.res);
+    //     }
+    // });
 
-export const getCounterStaff =  async(req, res) => {
-    try {
-        const counterStaff = await CounterStaff.find();
+    res.status(200).json({ result });
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong. ' });
+  }
+};
 
-        res.status(200).json(counterStaff);
-    } catch (error) {
-        res.status(404).json( {message: error.message });
-    }
-}
+export const getCounterStaff = async (req, res) => {
+  try {
+    const counterStaff = await CounterStaff.find();
 
-export const getOneCounterStaff =  async(req, res) => {
-    const { id } = req.params;
+    res.status(200).json(counterStaff);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+};
 
-    try {
-        const counterStaff = await CounterStaff.findOne({ _id: id });
-        
-        res.status(200).json(counterStaff);
-    } catch (error) {
-        res.status(404).json( {message: error.message });
-    }
-}
+export const getOneCounterStaff = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const counterStaff = await CounterStaff.findOne({ _id: id });
+
+    res.status(200).json(counterStaff);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+};
 
 export const updateCounterStaff = async (req, res) => {
-    const { id: _id } = req.params;
-    const { email, fname, lname } = req.body;
+  const { id: _id } = req.params;
+  const { email, fname, lname } = req.body;
 
-    if(!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('No account with that id');
+  if (!mongoose.Types.ObjectId.isValid(_id))
+    return res.status(404).send('No account with that id');
 
-    const updatedCounterStaff = await CounterStaff.findByIdAndUpdate(_id, { fname: fname, lname: lname, email: email }, { new: true });
+  const updatedCounterStaff = await CounterStaff.findByIdAndUpdate(
+    _id,
+    { fname: fname, lname: lname, email: email },
+    { new: true }
+  );
 
-    res.json(updatedCounterStaff);
- 
-}
+  res.json(updatedCounterStaff);
+};
 
 export const updateCounterStaffUser = async (req, res) => {
-    const { id, email, fname, lname, username } = req.body;
+  const { id, email, fname, lname, username } = req.body;
 
-    if(!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send('No account with that id');
+  if (!mongoose.Types.ObjectId.isValid(id))
+    return res.status(404).send('No account with that id');
 
-    const updatedCounterStaff = await CounterStaff.findByIdAndUpdate(id, { fname: fname, lname: lname, username: username, email: email }, { new: true });
+  const updatedCounterStaff = await CounterStaff.findByIdAndUpdate(
+    id,
+    { fname: fname, lname: lname, username: username, email: email },
+    { new: true }
+  );
 
-    res.json(updatedCounterStaff);
- 
-}
+  res.json(updatedCounterStaff);
+};
 
 export const signout = async (req, res) => {
-    // const { id: _id } = req.params;
-    const { id, service, counter} = req.body;
+  // const { id: _id } = req.params;
+  const { id, service, counter } = req.body;
 
-    const counterFind = await Counter.findOne({ cName: counter, service: service });
+  const counterFind = await Counter.findOne({
+    cName: counter,
+    service: service,
+  });
 
-    await CounterStaff.findByIdAndUpdate(id, { curService: 'None', curCounter: 'None' }, { new: true });
-    
-    await Counter.findByIdAndUpdate(counterFind._id, { status: false, curStaffName: '' }, { new: true });
-    // res.json(updatedCounterStaff);
-}
+  await CounterStaff.findByIdAndUpdate(
+    id,
+    { curService: 'None', curCounter: 'None' },
+    { new: true }
+  );
+
+  await Counter.findByIdAndUpdate(
+    counterFind._id,
+    { status: false, curStaffName: '' },
+    { new: true }
+  );
+  // res.json(updatedCounterStaff);
+};
 
 export const activateCounterStaff = async (req, res) => {
-    const { id: _id } = req.params;
+  const { id: _id } = req.params;
 
-    if(!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('No account with that id');
+  if (!mongoose.Types.ObjectId.isValid(_id))
+    return res.status(404).send('No account with that id');
 
-    const account = await CounterStaff.findById(_id);
+  const account = await CounterStaff.findById(_id);
 
-    console.log(account.status);
+  console.log(account.status);
 
-    // const status = false;
-    
-    // const updatedCounterStaff = await CounterStaff.findByIdAndUpdate(_id, { status: status }, { new: true });
+  // const status = false;
 
-    // res.json(updatedCounterStaff);
- 
-}
+  // const updatedCounterStaff = await CounterStaff.findByIdAndUpdate(_id, { status: status }, { new: true });
+
+  // res.json(updatedCounterStaff);
+};
 
 export const deleteCounterStaff = async (req, res) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    if(!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send('No Account with that id');
+  if (!mongoose.Types.ObjectId.isValid(id))
+    return res.status(404).send('No Account with that id');
 
-    await CounterStaff.findByIdAndRemove(id);
+  await CounterStaff.findByIdAndRemove(id);
 
-    res.json({ message: 'Counter Staff deleted successfully' });
-  
-}
+  res.json({ message: 'Counter Staff deleted successfully' });
+};

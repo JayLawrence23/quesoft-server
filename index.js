@@ -43,7 +43,7 @@ const PORT = process.env.PORT || 5000;
 //     console.log(`📈 Running on ${PORT}.`)
 // });
 
-export const io = new Server(server, {
+const io = new Server(server, {
     cors: {
             origin: `https://quesoft-jaylawrence23.vercel.app`,
             methods: ["GET", "POST"],
@@ -69,7 +69,7 @@ app.get('/', (req, res) => {
 });
 
 func(io);
-
+export {io};
 // function backupMongoDB() {
 //     const child = spawn('mongodump', [
 //         `--db=${DB_NAME}`,
