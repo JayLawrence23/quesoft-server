@@ -321,28 +321,27 @@ export const queuingComplete = async (req, res) => {
                 });
             }
             if (predWait === 2 && status === 'Waiting') {
-              sgMail.send(
-                {
+              sgMail
+                .send({
                   to: email,
                   from: process.env.SENDGRID_Email_From,
                   subject: `${ticketNo} - YOUR LINE IS NEAR, GET READY`,
                   html: `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
                         <h2 style="text-align: center; text-transform: uppercase;color: orange;">STAY ALERT! GET READY</h2>
                         </div>`,
-                },
-                function (err, info) {
-                  if (err) {
-                    console.log(err);
-                  } else {
-                    console.log('Message sent: ' + info.res);
-                  }
-                }
-              );
+                })
+                .then((res) => {
+                  //    console.log('res', res)
+                  console.log('email sent');
+                })
+                .catch((err) => {
+                  console.log('err sending email', err);
+                });
               console.log('MAKE SURE MALAPIT KA NA! ' + ticketNo);
             }
             if (status === 'Calling') {
-              sgMail.send(
-                {
+              sgMail
+                .send({
                   to: email,
                   from: process.env.SENDGRID_Email_From,
                   subject: `${ticketNo} - IT'S YOUR TURN, PLEASE GO TO THE COUNTER`,
@@ -351,15 +350,14 @@ export const queuingComplete = async (req, res) => {
                         <h5>
                         </h5>
                         </div>`,
-                },
-                function (err, info) {
-                  if (err) {
-                    console.log(err);
-                  } else {
-                    console.log('Message sent: ' + info.res);
-                  }
-                }
-              );
+                })
+                .then((res) => {
+                  //    console.log('res', res)
+                  console.log('email sent');
+                })
+                .catch((err) => {
+                  console.log('err sending email', err);
+                });;
               console.log('dalian mo tinatawag ka na! ' + ticketNo);
             }
           }
