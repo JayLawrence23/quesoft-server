@@ -145,21 +145,11 @@ export const callCustomer = async (req, res) => {
         updatedTransaction = await Transaction.findByIdAndUpdate(ticket._id, { status: "Calling", counterName: counterNo, calledTime: today }, { new: true } )
         getService.queuingTic.shift();
 
-        // const thirdIndex = await Transaction.find({ predWait: 3, $or: [ { email: { $ne: null }}, { contact: { $ne: null }}] });
-        // if(allTransaction.predWait === 2 && allTransaction.email !== null){
-        //     io.emit('thirdIndex', allTransaction.email);
-        // }
-
-        // if(allTransaction.predWait === 1 && allTransaction.email !== null){
-        //     io.emit('secondIndex', allTransaction.email);
-        // }
-
-        // if(allTransaction.predWait === 0 && allTransaction.email !== null){
-        //     io.emit('firstIndex', allTransaction.email);
-        // }
-
         await Service.findByIdAndUpdate(getService._id, getService, { new: true });
     }
+
+    // Socket IO for real-time
+    io.sockets.emit('call', updatedTransaction)
    
     res.status(200).json(updatedTransaction);
 
@@ -228,6 +218,8 @@ export const missedCustomer = async (req, res) => {
     try {
         const missed = await Transaction.findByIdAndUpdate(id, { status: "Missed", missed: true }, { new: true })
 
+         // Socket IO for real-time
+         io.emit('missed', missed)
         res.status(200).json(missed);
     } catch (error) {
         res.status(409).json( {message: error.message });
