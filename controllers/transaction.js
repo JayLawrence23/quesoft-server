@@ -263,7 +263,7 @@ export const queuingComplete = async (req, res) => {
                 }) 
                 .then(() => console.log('Message sent!')) 
                 .catch((err) => console.log(err));
-        
+                console.log("NEXT KA NA HOY! "+ ticketNo)
             }
             if(predWait === 2 && status === "Waiting"){
                 client.messages 
