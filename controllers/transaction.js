@@ -260,7 +260,7 @@ export const queuingComplete = async (req, res) => {
                 from: '+639774539951',         
                 to: contact,
                 body: `${ticketNo} - YOU'RE NEXT! PLEASE BE READY. Be alert!`,
-                messagingServiceSid: messagingServiceSid,
+                // messagingServiceSid: messagingServiceSid,
                 }) 
                 .then(() => console.log('Message sent!')) 
                 .catch((err) => console.log(err));
@@ -272,7 +272,7 @@ export const queuingComplete = async (req, res) => {
                 from: '+639774539951',  
                 to: contact,
                 body: `${ticketNo} - YOUR LINE IS NEAR, GET READY. MAKE SURE YOU'RE INSIDE OF THE VICINITY.`,
-                messagingServiceSid: messagingServiceSid,
+                // messagingServiceSid: messagingServiceSid,
                 }) 
                 .then(() => console.log('Message sent!')) 
                 .catch((err) => console.log(err));
@@ -284,7 +284,7 @@ export const queuingComplete = async (req, res) => {
                 from: '+639774539951',         
                 to: contact,
                 body: `${ticketNo} - IT'S YOUR TURN, PLEASE GO TO THE COUNTER.`,
-                messagingServiceSid: messagingServiceSid,
+                // messagingServiceSid: messagingServiceSid,
                 }) 
                 .then(() => console.log('Message sent!')) 
                 .catch((err) => console.log(err));
