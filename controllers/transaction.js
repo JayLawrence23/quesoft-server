@@ -258,8 +258,8 @@ export const queuingComplete = async (req, res) => {
                 client.messages 
                 .create({         
                 to: contact,
-                body: "YOU'RE NEXT! PLEASE BE READY. Be alert!",
-                // messagingServiceSid: messagingServiceSid,
+                body: `${ticketNo} - YOU'RE NEXT! PLEASE BE READY. Be alert!`,
+                messagingServiceSid: messagingServiceSid,
                 }) 
                 .then(() => console.log('Message sent!')) 
                 .catch((err) => console.log(err));
@@ -269,18 +269,18 @@ export const queuingComplete = async (req, res) => {
                 client.messages 
                 .create({         
                 to: contact,
-                body: "YOUR LINE IS NEAR, GET READY. MAKE SURE YOU'RE INSIDE OF THE VICINITY.",
+                body: `${ticketNo} - YOUR LINE IS NEAR, GET READY. MAKE SURE YOU'RE INSIDE OF THE VICINITY.`,
                 messagingServiceSid: messagingServiceSid,
                 }) 
                 .then(() => console.log('Message sent!')) 
                 .catch((err) => console.log(err));
                 console.log("MAKE SURE MALAPIT KA NA! "+ ticketNo)
             }
-            if(status === "Calling" ){
+            if(predWait === 0 && status === "Calling" ){
                 client.messages 
                 .create({         
                 to: contact,
-                body: "IT'S YOUR TURN, PLEASE GO TO THE COUNTER.",
+                body: `${ticketNo} - IT'S YOUR TURN, PLEASE GO TO THE COUNTER.`,
                 messagingServiceSid: messagingServiceSid,
                 }) 
                 .then(() => console.log('Message sent!')) 
