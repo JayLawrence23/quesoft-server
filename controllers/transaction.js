@@ -256,7 +256,8 @@ export const queuingComplete = async (req, res) => {
         notificationsForSMS.forEach(({ predWait, ticketNo, contact, status }) => {
             if(predWait === 1 && status === "Waiting"){
                 client.messages 
-                .create({         
+                .create({
+                from: '+639774539951',         
                 to: contact,
                 body: `${ticketNo} - YOU'RE NEXT! PLEASE BE READY. Be alert!`,
                 messagingServiceSid: messagingServiceSid,
@@ -267,7 +268,8 @@ export const queuingComplete = async (req, res) => {
             }
             if(predWait === 2 && status === "Waiting"){
                 client.messages 
-                .create({         
+                .create({       
+                from: '+639774539951',  
                 to: contact,
                 body: `${ticketNo} - YOUR LINE IS NEAR, GET READY. MAKE SURE YOU'RE INSIDE OF THE VICINITY.`,
                 messagingServiceSid: messagingServiceSid,
@@ -278,7 +280,8 @@ export const queuingComplete = async (req, res) => {
             }
             if(predWait === 0){
                 client.messages 
-                .create({         
+                .create({
+                from: '+639774539951',         
                 to: contact,
                 body: `${ticketNo} - IT'S YOUR TURN, PLEASE GO TO THE COUNTER.`,
                 messagingServiceSid: messagingServiceSid,
