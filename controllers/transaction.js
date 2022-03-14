@@ -276,7 +276,7 @@ export const queuingComplete = async (req, res) => {
                 .catch((err) => console.log(err));
                 console.log("MAKE SURE MALAPIT KA NA! "+ ticketNo)
             }
-            if(predWait === 0 && status === "Calling" ){
+            if(predWait === 0){
                 client.messages 
                 .create({         
                 to: contact,
