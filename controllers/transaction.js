@@ -242,7 +242,7 @@ export const queuingComplete = async (req, res) => {
 
         await Counter.findByIdAndUpdate(getCounter._id, getCounter, { new: true })
         
-        await Transaction.updateOne(transactionNext._id, { predWait : 0 })
+        await Transaction.findByIdAndUpdate(transactionNext._id, { predWait : 0 })
        
         await Transaction.updateMany({ service: service, status: "Waiting" },  {$inc : { predWait : -1}})
         
