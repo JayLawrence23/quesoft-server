@@ -241,11 +241,11 @@ export const queuingComplete = async (req, res) => {
         getCounter.servedTicket.push(ticketNo);
 
         await Counter.findByIdAndUpdate(getCounter._id, getCounter, { new: true })
-        if(transactionNext){
-            await Transaction.updateOne({ predWait : 0 })
-        } else {
-            await Transaction.updateMany({ service: service, status: "Waiting" },  {$inc : { predWait : -1}})
-        }
+        
+        await Transaction.updateOne(transactionNext._id, { predWait : 0 })
+       
+        await Transaction.updateMany({ service: service, status: "Waiting" },  {$inc : { predWait : -1}})
+        
 
         const notificationsForSMS = await Transaction.find({ business: admin.business, service: service, email: null, contact:  { $ne: null } }).sort('createdAt');
 
