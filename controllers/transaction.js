@@ -116,7 +116,7 @@ export const leaveQueuing = async (req, res) => {
 
         await Service.findByIdAndUpdate(service._id, service, { new: true })
 
-        io.emit('queuing', leaveQueue)
+        io.emit('leave', leaveQueue)
 
         res.json(leaveQueue);
     } catch (error) {
