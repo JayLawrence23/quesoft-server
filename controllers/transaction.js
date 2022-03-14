@@ -116,7 +116,7 @@ export const leaveQueuing = async (req, res) => {
 
         await Service.findByIdAndUpdate(service._id, service, { new: true })
 
-        io.emit('queuing', leaveQueue)
+        io.emit('leave', leaveQueue)
 
         res.json(leaveQueue);
     } catch (error) {
@@ -145,21 +145,11 @@ export const callCustomer = async (req, res) => {
         updatedTransaction = await Transaction.findByIdAndUpdate(ticket._id, { status: "Calling", counterName: counterNo, calledTime: today }, { new: true } )
         getService.queuingTic.shift();
 
-        // const thirdIndex = await Transaction.find({ predWait: 3, $or: [ { email: { $ne: null }}, { contact: { $ne: null }}] });
-        // if(allTransaction.predWait === 2 && allTransaction.email !== null){
-        //     io.emit('thirdIndex', allTransaction.email);
-        // }
-
-        // if(allTransaction.predWait === 1 && allTransaction.email !== null){
-        //     io.emit('secondIndex', allTransaction.email);
-        // }
-
-        // if(allTransaction.predWait === 0 && allTransaction.email !== null){
-        //     io.emit('firstIndex', allTransaction.email);
-        // }
-
         await Service.findByIdAndUpdate(getService._id, getService, { new: true });
     }
+
+    // Socket IO for real-time
+    io.sockets.emit('call', updatedTransaction)
    
     res.status(200).json(updatedTransaction);
 
@@ -228,6 +218,8 @@ export const missedCustomer = async (req, res) => {
     try {
         const missed = await Transaction.findByIdAndUpdate(id, { status: "Missed", missed: true }, { new: true })
 
+         // Socket IO for real-time
+         io.emit('missed', missed)
         res.status(200).json(missed);
     } catch (error) {
         res.status(409).json( {message: error.message });
@@ -249,11 +241,10 @@ export const queuingComplete = async (req, res) => {
         getCounter.servedTicket.push(ticketNo);
 
         await Counter.findByIdAndUpdate(getCounter._id, getCounter, { new: true })
-        if(transactionNext){
-            await Transaction.updateOne({ predWait : 0 })
-        } else {
-            await Transaction.updateMany({ service: service, status: "Waiting" },  {$inc : { predWait : -1}})
-        }
+       
+        await Transaction.updateMany({ service: service, status: "Waiting" },  {$inc : { predWait : -1}})
+        
+        await Transaction.findByIdAndUpdate(transactionNext._id, { predWait : 0 }, { new: true })
 
         const notificationsForSMS = await Transaction.find({ business: admin.business, service: service, email: null, contact:  { $ne: null } }).sort('createdAt');
 
@@ -272,7 +263,7 @@ export const queuingComplete = async (req, res) => {
                 }) 
                 .then(() => console.log('Message sent!')) 
                 .catch((err) => console.log(err));
-        
+                console.log("NEXT KA NA HOY! "+ ticketNo)
             }
             if(predWait === 2 && status === "Waiting"){
                 client.messages 
@@ -321,28 +312,27 @@ export const queuingComplete = async (req, res) => {
                 });
             }
             if (predWait === 2 && status === 'Waiting') {
-              sgMail.send(
-                {
+              sgMail
+                .send({
                   to: email,
                   from: process.env.SENDGRID_Email_From,
                   subject: `${ticketNo} - YOUR LINE IS NEAR, GET READY`,
                   html: `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
                         <h2 style="text-align: center; text-transform: uppercase;color: orange;">STAY ALERT! GET READY</h2>
                         </div>`,
-                },
-                function (err, info) {
-                  if (err) {
-                    console.log(err);
-                  } else {
-                    console.log('Message sent: ' + info.res);
-                  }
-                }
-              );
+                })
+                .then((res) => {
+                  //    console.log('res', res)
+                  console.log('email sent');
+                })
+                .catch((err) => {
+                  console.log('err sending email', err);
+                });
               console.log('MAKE SURE MALAPIT KA NA! ' + ticketNo);
             }
             if (status === 'Calling') {
-              sgMail.send(
-                {
+              sgMail
+                .send({
                   to: email,
                   from: process.env.SENDGRID_Email_From,
                   subject: `${ticketNo} - IT'S YOUR TURN, PLEASE GO TO THE COUNTER`,
@@ -351,15 +341,14 @@ export const queuingComplete = async (req, res) => {
                         <h5>
                         </h5>
                         </div>`,
-                },
-                function (err, info) {
-                  if (err) {
-                    console.log(err);
-                  } else {
-                    console.log('Message sent: ' + info.res);
-                  }
-                }
-              );
+                })
+                .then((res) => {
+                  //    console.log('res', res)
+                  console.log('email sent');
+                })
+                .catch((err) => {
+                  console.log('err sending email', err);
+                });;
               console.log('dalian mo tinatawag ka na! ' + ticketNo);
             }
           }

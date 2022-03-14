@@ -85,7 +85,10 @@ export const signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(code, 12);
 
     const username = fname.charAt(0) + fname.charAt(1) + '' + lname;
+
     const lowcaseUsername = username.toLowerCase();
+
+    console.log(code+" "+lowcaseUsername);
 
     const result = await CounterStaff.create({
       fname: fname,
@@ -97,6 +100,7 @@ export const signup = async (req, res) => {
 
     // sendMailCounterStaff(email, username, "1234", "http://localhost:3000/queuing-system/counterstaff/auth", "Login Now")
 
+    
     console.log('sending message');
     sgMail
       .send({

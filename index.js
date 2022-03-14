@@ -45,7 +45,7 @@ const PORT = process.env.PORT || 5000;
 
 const io = new Server(server, {
     cors: {
-            origin: `https://quesoft-jaylawrence23.vercel.app`,
+            origin: `https://quesoft.vercel.app`,
             methods: ["GET", "POST"],
             credentials: true,
             transports: ['websocket', 'polling'],
