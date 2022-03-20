@@ -20,6 +20,7 @@ import {
     countWaiting,
     countServed,
     countMissed,
+    countServedByAllService,
     showMissedByService,
     searchMissedByService,
     serveMissedTicket,
@@ -53,6 +54,8 @@ router.post('/countmissed', countMissedByService);
 router.post('/countwaitall', countWaiting);
 router.post('/countservedall', countServed);
 router.post('/countmissedall', countMissed);
+
+router.post('/countservedallservice', countServedByAllService);
 
 //Missed Queue Transaction
 router.post('/showmissed', showMissedByService);

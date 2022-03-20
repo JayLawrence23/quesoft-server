@@ -229,12 +229,19 @@ export const missedCustomer = async (req, res) => {
 
 export const queuingComplete = async (req, res) => {
     const { id, ticketNo, service, counterName } = req.body;
+    const currentDate = new Date();
 
     try{
         const admin = await Admin.findOne({ username: "admin" });
         const getCounter = await Counter.findOne( { cName: counterName, service: service });
 
-        const updatedTransaction = await Transaction.findByIdAndUpdate(id, { status: "Complete", predWait: null }, { new: true });
+        const customer = await Transaction.findById(id);
+
+        let calledTime = customer.calledTime;
+
+        const serviceTime = (currentDate.getMinutes() - calledTime.getMinutes());
+
+        const updatedTransaction = await Transaction.findByIdAndUpdate(id, { status: "Complete", predWait: null, serviceTime: serviceTime }, { new: true });
 
         const transactionNext = await Transaction.findOne({ service: service, status: "Waiting", predWait: 1 });
 
@@ -333,7 +340,7 @@ export const queuingComplete = async (req, res) => {
                 });
               console.log('MAKE SURE MALAPIT KA NA! ' + ticketNo);
             }
-            if (status === 'Calling') {
+            if (predWait === 0) {
               sgMail
                 .send({
                   to: email,
@@ -420,8 +427,9 @@ export const smsNotif = async (req, res) => {
 export const countWaiting = async (req, res) => {
 
     try {
-        const result = await Transaction.countDocuments( { status: "Waiting" } );
-        console.log(result)
+        const admin = await Admin.findOne({ username: "admin" });
+        const result = await Transaction.countDocuments( { business: admin.business, status: "Waiting" } );
+      
         res.status(200).json(result);
     } catch (error) {
         res.status(404).json( {message: error.message });
@@ -431,7 +439,8 @@ export const countWaiting = async (req, res) => {
 export const countServed = async (req, res) => {
    
     try {
-        const result = await Transaction.countDocuments( { status: "Complete"} );
+        const admin = await Admin.findOne({ username: "admin" });
+        const result = await Transaction.countDocuments( { business: admin.business, status: "Complete"} );
         
         
         res.status(200).json(result);
@@ -444,7 +453,8 @@ export const countServed = async (req, res) => {
 export const countMissed = async (req, res) => {
    
     try {
-        const result = await Transaction.countDocuments( { status: "Missed" } );
+        const admin = await Admin.findOne({ username: "admin" });
+        const result = await Transaction.countDocuments( { business: admin.business, status: "Missed" } );
         
         res.status(200).json(result);
     } catch (error) {
@@ -488,6 +498,54 @@ export const countMissedByService = async (req, res) => {
         res.status(404).json( {message: error.message });
     }
 }
+
+
+
+export const countServedByAllService = async (req, res) => {
+
+    let allServed = {
+        service: [],
+        served: [],
+    };
+    
+    try {
+
+        const admin = await Admin.findOne({ username: "admin" });
+        const services = await Service.find({ business: admin.business }).sort({ createdAt: 1 });
+
+        services.map((service) => allServed.service.push(service.servName));
+
+        Promise.all(
+            allServed.service.map((ser) => (
+                servedByAllService(ser)
+                .then((count) => allServed.served.push(count))
+                .catch(err => {
+                    console.log(err)
+                })
+            ))
+        ).then(() => res.status(200).json(allServed))
+
+        // 
+
+    } catch (error) {
+        res.status(404).json( {message: error.message });
+    }
+}
+
+const servedByAllService = async (service) => {
+    try {
+
+        const admin = await Admin.findOne({ username: "admin" });
+
+        const result = await Transaction.countDocuments( { business: admin.business, service: service, status: "Complete",  });
+        
+        // console.log(service+": "+result)
+        return result;
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 
 // ######### Missed tickets ################
 
