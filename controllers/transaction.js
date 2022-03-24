@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import moment from'moment'
+import cron from 'node-cron'
 
 import Transaction from '../models/transactions.js';
 import Service from '../models/service.js';
@@ -25,10 +26,33 @@ import nodemailer from 'nodemailer';
 
 import {sgMail} from '../helpers/emailTransportot.js'
 
+// cron.schedule('1 * * * *', () => backupMongoDB()) 
+
 export const getTransactions =  async(req, res) => {
+
+    const minute = 1000 * 60;
+    const hour = minute * 60;
+    const day = hour * 24;
+    const year = day * 365;
+
+    const currentDate = new Date();
+
     try {
         const admin = await Admin.findOne({ username: "admin" });
         const transaction = await Transaction.find({ business: admin.business}).sort('createdAt');
+
+        // transaction.forEach(({ status, missedTime }) => {
+        //     let misstime = Math.round(missedTime.getTime() / minute);
+        //     let current = Math.round(currentDate.getTime() / minute);
+        
+        //     let range = misstime - current;
+        //     if(status === "Missed"){
+        //         if(range > 2){
+        //             await Transaction.updateMany({status: "Missed"}, { status: "Missed Expired"});
+        //         }
+        //     }
+            
+        // });
 
         res.status(200).json(transaction);
     } catch (error) {
@@ -52,8 +76,8 @@ export const createTransaction = async (req, res) => {
     const { service, ticketNo, code, business } = req.body;
 
     try {
-
-        const getService = await Service.findOne( { servName: service });
+        const admin = await Admin.findOne({ username: "admin" });
+        const getService = await Service.findOne( { business: admin.business, servName: service });
         console.log('getService', getService.ticketNo)
          let ticketLength =
            getService.ticketNo && getService.ticketNo.length + 1;
@@ -81,14 +105,60 @@ export const createTransaction = async (req, res) => {
     }
 }
 
+export const recreateTransactionByCounter = async (req, res) => {
+    const { service, code, business, id, email, contact, monitor } = req.body;
+
+    try {
+        const admin = await Admin.findOne({ username: "admin" });
+        await Transaction.findByIdAndUpdate(id, { status: "Complete", code: null }, { new: true });
+        const getService = await Service.findOne( { business: admin.business, servName: service });
+        console.log('getService', getService.ticketNo)
+         let ticketLength =
+           getService.ticketNo && getService.ticketNo.length + 1;
+         let currentTicketNo = getService.prefix + '-0' + ticketLength;
+         console.log('currentTicketNo', currentTicketNo);
+
+        getService.ticketNo.push(currentTicketNo);
+        getService.queuingTic.push(currentTicketNo);
+        await getService.save();
+
+        const index = getService.queuingTic.findIndex((ticketno) => ticketno === String(currentTicketNo));
+
+        const newTransaction = await Transaction.create({ 
+            code: code, 
+            service: service, 
+            ticketNo: currentTicketNo, 
+            predWait: index, 
+            business: business, 
+            tags: getService.tags,
+            email: email,
+            contact: contact,
+            monitor: monitor,
+         });
+
+        console.log()
+        console.log()
+        console.log()
+        // await Service.findByIdAndUpdate(getService._id, getService, { new: true })
+
+        //Socket IO for real-time
+        io.emit('generateticket', newTransaction);
+        res.status(200).json({ newTransaction });
+    } catch (error) {
+        res.status(409).json( {message: error.message });
+    }
+}
+
 export const getTicket = async (req, res) => {
-    const { service } = req.body;
+    const { code, service } = req.body;
 
     try {
         const transaction = await Transaction.findOne({
             service: service,
-            status: 'Waiting'
-        }).sort({'createdAt': -1})
+            status: 'Waiting',
+            code: code,
+        });
+        
 
         res.status(200).json(transaction);
     } catch (error) {
@@ -214,9 +284,10 @@ export const arrivedCustomer = async (req, res) => {
 
 export const missedCustomer = async (req, res) => {
     const { id } = req.body;
+    const currentDate = new Date();
    
     try {
-        const missed = await Transaction.findByIdAndUpdate(id, { status: "Missed", missed: true }, { new: true })
+        const missed = await Transaction.findByIdAndUpdate(id, { status: "Missed", missed: true, missedTime: currentDate }, { new: true })
 
          // Socket IO for real-time
          io.emit('missed', missed)
@@ -230,6 +301,7 @@ export const missedCustomer = async (req, res) => {
 export const queuingComplete = async (req, res) => {
     const { id, ticketNo, service, counterName } = req.body;
     const currentDate = new Date();
+    const minute = 1000 * 60;
 
     try{
         const admin = await Admin.findOne({ username: "admin" });
@@ -239,7 +311,10 @@ export const queuingComplete = async (req, res) => {
 
         let calledTime = customer.calledTime;
 
-        const serviceTime = (currentDate.getMinutes() - calledTime.getMinutes());
+        let called = Math.round(calledTime.getTime() / minute);
+        let current = Math.round(currentDate.getTime() / minute);
+
+        const serviceTime = (current - called);
 
         const updatedTransaction = await Transaction.findByIdAndUpdate(id, { status: "Complete", predWait: null, serviceTime: serviceTime }, { new: true });
 
@@ -428,7 +503,7 @@ export const countWaiting = async (req, res) => {
 
     try {
         const admin = await Admin.findOne({ username: "admin" });
-        const result = await Transaction.countDocuments( { business: admin.business, status: "Waiting" } );
+        const result = await Transaction.countDocuments( { business: admin.business, status: "Waiting", } );
       
         res.status(200).json(result);
     } catch (error) {
@@ -438,9 +513,10 @@ export const countWaiting = async (req, res) => {
 
 export const countServed = async (req, res) => {
    
+
     try {
         const admin = await Admin.findOne({ username: "admin" });
-        const result = await Transaction.countDocuments( { business: admin.business, status: "Complete"} );
+        const result = await Transaction.countDocuments( { business: admin.business, status: "Complete", calledTime: { $gte: startOfDay, $lt: endOfDay }} );
         
         
         res.status(200).json(result);
@@ -454,7 +530,7 @@ export const countMissed = async (req, res) => {
    
     try {
         const admin = await Admin.findOne({ username: "admin" });
-        const result = await Transaction.countDocuments( { business: admin.business, status: "Missed" } );
+        const result = await Transaction.countDocuments( { business: admin.business, status: "Missed", calledTime: { $gte: startOfDay, $lt: endOfDay } } );
         
         res.status(200).json(result);
     } catch (error) {
@@ -503,48 +579,63 @@ export const countMissedByService = async (req, res) => {
 
 export const countServedByAllService = async (req, res) => {
 
-    let allServed = {
-        service: [],
-        served: [],
-    };
-    
     try {
 
         const admin = await Admin.findOne({ username: "admin" });
-        const services = await Service.find({ business: admin.business }).sort({ createdAt: 1 });
 
-        services.map((service) => allServed.service.push(service.servName));
+        // Promise.all(
+        //     allServed.service.map((ser) => (
+        //         servedByAllService(ser)
+        //         .then((count) => allServed.served.push(count))
+        //         .catch(err => {
+        //             console.log(err)
+        //         })
+        //     ))
+        // ).then(() => )
 
-        Promise.all(
-            allServed.service.map((ser) => (
-                servedByAllService(ser)
-                .then((count) => allServed.served.push(count))
-                .catch(err => {
-                    console.log(err)
-                })
-            ))
-        ).then(() => res.status(200).json(allServed))
+        const countServedByService = await Transaction.aggregate([
+            {
+                $match : { business: admin.business, status: "Complete", }
+            },
+            {
+                $group: {
+                    _id: "$service",
+                    count: { $sum: 1}
+                }
+            },
+        ]);
 
-        // 
-
+        res.status(200).json(countServedByService);
     } catch (error) {
         res.status(404).json( {message: error.message });
     }
 }
 
-const servedByAllService = async (service) => {
+export const averageServiceTime = async (req, res) => {
+
     try {
 
         const admin = await Admin.findOne({ username: "admin" });
 
-        const result = await Transaction.countDocuments( { business: admin.business, service: service, status: "Complete",  });
-        
-        // console.log(service+": "+result)
-        return result;
+        const averageServiceTime = await Transaction.aggregate([
+            {
+                $match : { business: admin.business, status: "Complete" }
+            },
+            {
+                $group: {
+                    _id: "$service",
+                    ave: { $avg: "$serviceTime"}
+                }
+            },
+        ])
+
+        res.status(200).json(averageServiceTime)
     } catch (error) {
-        console.log(error);
+        res.status(404).json( {message: error.message });
     }
 }
+
+
 
 
 // ######### Missed tickets ################
@@ -658,3 +749,4 @@ export const likePost = async (req, res) => {
 
     res.json(updatedPost);
 }
+

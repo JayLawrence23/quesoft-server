@@ -3,6 +3,7 @@ import {
     getTransaction, 
     getTransactions, 
     createTransaction, 
+    recreateTransactionByCounter,
     deleteTransaction, 
     getTicket, 
     leaveQueuing,
@@ -25,6 +26,7 @@ import {
     searchMissedByService,
     serveMissedTicket,
     completeMissedTicket,
+    averageServiceTime
 } from '../controllers/transaction.js'
 // import auth from '../middleware/auth.js'
 const router = express.Router();
@@ -33,9 +35,10 @@ const router = express.Router();
 router.get('/:id', getTransaction);
 router.get('/', getTransactions);
 router.post('/', createTransaction);
+router.post('/createticketbycounter', recreateTransactionByCounter);
 // router.patch('/:id', updateTransaction); //for updating we need to know the id
 router.delete('/:id', deleteTransaction);
-router.get('/ticket/', getTicket);
+router.post('/ticket/', getTicket);
 router.patch('/leave/:id', leaveQueuing)
 router.patch('/call', callCustomer)
 router.get('/nowserve', getCallingCustomers)
@@ -56,6 +59,8 @@ router.post('/countservedall', countServed);
 router.post('/countmissedall', countMissed);
 
 router.post('/countservedallservice', countServedByAllService);
+router.post('/averageservicetime', averageServiceTime);
+
 
 //Missed Queue Transaction
 router.post('/showmissed', showMissedByService);

@@ -13,6 +13,7 @@ const transactionSchema = mongoose.Schema({
     tags: [String],
     business: { type: String },
     serviceTime: { type: Number },
+    missedTime: { type: Date },
     issuedTime: {  
         type: Date,
         default: Date.now
