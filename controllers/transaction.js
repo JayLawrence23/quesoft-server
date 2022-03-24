@@ -39,7 +39,7 @@ export const getTransactions =  async(req, res) => {
 
     try {
         const admin = await Admin.findOne({ username: "admin" });
-        const transaction = await Transaction.find({ business: admin.business}).sort('createdAt');
+        const transaction = await Transaction.find({ business: admin.business, createdAt: -1 });
 
         // transaction.forEach(({ status, missedTime }) => {
         //     let misstime = Math.round(missedTime.getTime() / minute);
