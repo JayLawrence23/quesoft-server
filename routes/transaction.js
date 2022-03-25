@@ -26,7 +26,8 @@ import {
     searchMissedByService,
     serveMissedTicket,
     completeMissedTicket,
-    averageServiceTime
+    averageServiceTime,
+    fetchTransactionsByCounter
 } from '../controllers/transaction.js'
 // import auth from '../middleware/auth.js'
 const router = express.Router();
@@ -34,6 +35,7 @@ const router = express.Router();
 //localhost:5000/
 router.get('/:id', getTransaction);
 router.get('/', getTransactions);
+router.post('/getransactionbycounter', fetchTransactionsByCounter);
 router.post('/', createTransaction);
 router.post('/createticketbycounter', recreateTransactionByCounter);
 // router.patch('/:id', updateTransaction); //for updating we need to know the id

@@ -60,6 +60,35 @@ export const getTransactions =  async(req, res) => {
     }
 }
 
+
+export const fetchTransactionsByCounter =  async(req, res) => {
+
+    const { currentService } = req.body;
+
+    console.log(currentService)
+    try {
+        const admin = await Admin.findOne({ username: "admin" });
+        const transaction = await Transaction.find({ business: admin.business, service: currentService }).sort({ createdAt: -1 });
+
+        // transaction.forEach(({ status, missedTime }) => {
+        //     let misstime = Math.round(missedTime.getTime() / minute);
+        //     let current = Math.round(currentDate.getTime() / minute);
+        
+        //     let range = misstime - current;
+        //     if(status === "Missed"){
+        //         if(range > 2){
+        //             await Transaction.updateMany({status: "Missed"}, { status: "Missed Expired"});
+        //         }
+        //     }
+            
+        // });
+
+        res.status(200).json(transaction);
+    } catch (error) {
+        res.status(404).json( {message: error.message });
+    }
+}
+
 export const getTransaction =  async(req, res) => {
     const { id } = req.params;
 
@@ -283,11 +312,129 @@ export const arrivedCustomer = async (req, res) => {
 }
 
 export const missedCustomer = async (req, res) => {
-    const { id } = req.body;
+    const { id, service } = req.body;
     const currentDate = new Date();
    
     try {
+        const admin = await Admin.findOne({ username: "admin" });
         const missed = await Transaction.findByIdAndUpdate(id, { status: "Missed", missed: true, missedTime: currentDate }, { new: true })
+       
+        const transactionNext = await Transaction.findOne({ service: service, status: "Waiting", predWait: 1 });
+        await Transaction.updateMany({ service: service, status: "Waiting" },  {$inc : { predWait : -1}})
+        
+        await Transaction.findByIdAndUpdate(transactionNext._id, { predWait : 0 }, { new: true })
+
+        const notificationsForSMS = await Transaction.find({ business: admin.business, service: service, email: null, contact:  { $ne: null } }).sort('createdAt');
+
+        const notificationsForEmail = await Transaction.find({ business: admin.business, service: service, contact: null, email:  { $ne: null } }).sort('createdAt');
+
+        // const updatedPredwait = Transaction.find({ service: service, status: "Waiting" })
+
+        console.log('notificationsForEmail', notificationsForEmail.length)
+        notificationsForSMS.forEach(({ predWait, ticketNo, contact, status }) => {
+            if(predWait === 1 && status === "Waiting"){
+                client.messages 
+                .create({
+                from: '+16075369068',         
+                to: contact,
+                body: `${ticketNo} - YOU'RE NEXT! PLEASE BE READY. Be alert!`,
+                messagingServiceSid: messagingServiceSid,
+                }) 
+                .then(() => console.log('Message sent!')) 
+                .catch((err) => console.log(err));
+                console.log("NEXT KA NA HOY! "+ ticketNo)
+            }
+            if(predWait === 2 && status === "Waiting"){
+                client.messages 
+                .create({       
+                from: '+16075369068',  
+                to: contact,
+                body: `${ticketNo} - YOUR LINE IS NEAR, GET READY. MAKE SURE YOU'RE INSIDE OF THE VICINITY.`,
+                messagingServiceSid: messagingServiceSid,
+                }) 
+                .then(() => console.log('Message sent!')) 
+                .catch((err) => console.log(err));
+                console.log("MAKE SURE MALAPIT KA NA! "+ ticketNo)
+            }
+            if(predWait === 0){
+                client.messages 
+                .create({
+                from: '+16075369068',         
+                to: contact,
+                body: `${ticketNo} - IT'S YOUR TURN, PLEASE GO TO THE COUNTER.`,
+                messagingServiceSid: messagingServiceSid,
+                }) 
+                .then(() => console.log('Message sent!')) 
+                .catch((err) => console.log(err));
+                
+                console.log("dalian mo tinatawag ka na! "+ ticketNo)
+            }
+        })
+
+        notificationsForEmail.forEach(
+          ({ predWait, ticketNo, email, status }) => {
+              console.log('predWait', predWait)
+            if (predWait === 1 && status === 'Waiting') {
+              sgMail
+                .send({
+                  to: email,
+                  from: process.env.SENDGRID_Email_From,
+                  subject: `${ticketNo} - YOU'RE NEXT! PLEASE BE READY.`,
+                  html: `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
+                        <h2 style="text-align: center; text-transform: uppercase;color: orange;">BE READY, YOU'RE NEXT!</h2>
+                        </div>`,
+                })
+                .then((res) => {
+                  //    console.log('res', res)
+                  console.log('email sent');
+                })
+                .catch((err) => {
+                  console.log('err sending email', err);
+                });
+            }
+            if (predWait === 2 && status === 'Waiting') {
+              sgMail
+                .send({
+                  to: email,
+                  from: process.env.SENDGRID_Email_From,
+                  subject: `${ticketNo} - YOUR LINE IS NEAR, GET READY`,
+                  html: `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
+                        <h2 style="text-align: center; text-transform: uppercase;color: orange;">STAY ALERT! GET READY</h2>
+                        </div>`,
+                })
+                .then((res) => {
+                  //    console.log('res', res)
+                  console.log('email sent');
+                })
+                .catch((err) => {
+                  console.log('err sending email', err);
+                });
+              console.log('MAKE SURE MALAPIT KA NA! ' + ticketNo);
+            }
+            if (predWait === 0) {
+              sgMail
+                .send({
+                  to: email,
+                  from: process.env.SENDGRID_Email_From,
+                  subject: `${ticketNo} - IT'S YOUR TURN, PLEASE GO TO THE COUNTER`,
+                  html: `<div style="max-width: 700px; margin:auto; border: 4px solid #F7F7F7; padding: 50px 20px; font-size: 110%;">
+                        <h2 style="text-align: center; text-transform: uppercase;color: orange;">It's your turn, please go to the counter</h2>
+                        <h5>
+                        </h5>
+                        </div>`,
+                })
+                .then((res) => {
+                  //    console.log('res', res)
+                  console.log('email sent');
+                })
+                .catch((err) => {
+                  console.log('err sending email', err);
+                });;
+              console.log('dalian mo tinatawag ka na! ' + ticketNo);
+            }
+          }
+        );
+
 
          // Socket IO for real-time
          io.emit('missed', missed)
