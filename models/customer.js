@@ -3,9 +3,9 @@ import mongoose from 'mongoose';
 const customerSchema = mongoose.Schema({
     fname: { type: String, required: true },
     lname: { type: String, required: true },
-    mobile: { type: String, required: true },
-    email: { type: String, required: true },
-    password: { type: String, required: true },
+    mobile: { type: String },
+    email: { type: String },
+    transactionId: { type: String },
     status: {
         type: String,
         default: 'Active'

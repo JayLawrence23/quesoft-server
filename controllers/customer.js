@@ -44,10 +44,10 @@ export const monitorTicket =  async(req, res) => {
 }
 
 export const monitorTicketByCode =  async(req, res) => {
-    const { code } = req.body;
+    const { code, dname } = req.body;
 
     try {
-        const existingUser = await Transaction.findOne({ code: code });
+        const existingUser = await Transaction.findOne({ dname: dname, code: code });
 
         if(!existingUser) return res.status(404).json({ message: "Ticket doesn't exist. "})
 
@@ -79,5 +79,21 @@ export const signup = async (req, res) => {
 
     } catch (error) {
         res.status(500).json( {message: "Something went wrong. "});
+    }
+}
+
+export const getTransactions =  async(req, res) => {
+    const { id } = req.body;
+
+    try {
+        const existingUser = await Customer.findById({ _id: id });
+
+        if(!existingUser) return res.status(404).json({ message: "User doesn't exist. "})
+        
+        const transactions = await Transaction.find({ userId: existingUser._id });
+       
+        res.status(200).json(transactions);
+    } catch (error) {
+        res.status(404).json( {message: error.message });
     }
 }
