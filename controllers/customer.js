@@ -5,16 +5,16 @@ import Customer from '../models/customer.js'
 import Transaction from '../models/transactions.js'
 
 export const signin =  async(req, res) => {
-    const { email, password } = req.body;
+    const { mobile } = req.body;
 
     try {
-        const existingUser = await Customer.findOne({ email });
+        const existingUser = await Customer.findOne({ mobile: mobile });
 
         if(!existingUser) return res.status(404).json({ message: "User doesn't exist. "})
 
-        const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
+        // const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
 
-        if(!isPasswordCorrect) return res.status(404).json({ message: "Invalid credentials. "})
+        // if(!isPasswordCorrect) return res.status(404).json({ message: "Invalid credentials. "})
 
         const token = jwt.sign({ email: existingUser.email, id: existingUser._id}, 'test', { expiresIn: "1h" })
 
@@ -62,20 +62,18 @@ export const monitorTicketByCode =  async(req, res) => {
 
 
 export const signup = async (req, res) => {
-    const { email, password, fname, lname, mobile, accno } = req.body;
+    const { fname, lname, mobile } = req.body;
 
     try {
-        const existingUser = await Customer.findOne({ email });
+        const existingUser = await Customer.findOne({ mobile: mobile });
 
         if(existingUser) return res.status(400).json({ message: "User already exist. "})
 
-        const hashedPassword = await bcrypt.hash(password, 12);
+        const result = await Customer.create({ fname: fname, lname: lname, mobile: mobile})
 
-        const result = await Customer.create({ fname: fname, lname: lname, accno: accno, email: email, mobile: mobile, password: hashedPassword})
+        // const token = jwt.sign({ email: result.email, id: result._id}, 'test', { expiresIn: "12h" })
 
-        const token = jwt.sign({ email: result.email, id: result._id}, 'test', { expiresIn: "12h" })
-
-        res.status(200).json({ result, token});
+        res.status(200).json(result);
 
     } catch (error) {
         res.status(500).json( {message: "Something went wrong. "});
