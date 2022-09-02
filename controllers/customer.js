@@ -6,6 +6,7 @@ import Transaction from '../models/transactions.js'
 
 export const signin =  async(req, res) => {
     const { mobile } = req.body;
+    const code = Math.floor(100000 + Math.random() * 900000);
 
     try {
         const existingUser = await Customer.findOne({ mobile: mobile });
@@ -16,15 +17,34 @@ export const signin =  async(req, res) => {
 
         // if(!isPasswordCorrect) return res.status(404).json({ message: "Invalid credentials. "})
 
-        const token = jwt.sign({ email: existingUser.email, id: existingUser._id}, 'test', { expiresIn: "1h" })
+        await Customer.findByIdAndUpdate(existingUser._id, { otp: code } , { new: true });
 
-        res.status(200).json({ result: existingUser, token});
+        // const token = jwt.sign({ email: existingUser.email, id: existingUser._id}, 'test', { expiresIn: "1h" })
+
+        // res.status(200).json({ result: existingUser, token});
+        res.status(200).json(existingUser);
 
     } catch (error) {
         res.status(500).json( {message: "Something went wrong. "});
     }
 }
 
+export const otpauth =  async(req, res) => {
+    const { otp, mobile } = req.body;
+
+    try {
+        const existingUser = await Customer.findOne({ mobile: mobile });
+       
+        if(existingUser.otp !== otp) return res.status(404).json({ message: "Invalid OTP. "});
+
+        const result = await Customer.findByIdAndUpdate(existingUser._id, { otp: "none" } , { new: true });
+
+        res.status(200).json(result);
+
+    } catch (error) {
+        res.status(500).json( {message: "Something went wrong. "});
+    }
+}
 
 export const monitorTicket =  async(req, res) => {
     const { value } = req.params;
@@ -63,13 +83,14 @@ export const monitorTicketByCode =  async(req, res) => {
 
 export const signup = async (req, res) => {
     const { fname, lname, mobile } = req.body;
+    const code = Math.floor(100000 + Math.random() * 900000);
 
     try {
         const existingUser = await Customer.findOne({ mobile: mobile });
 
         if(existingUser) return res.status(400).json({ message: "User already exist. "})
 
-        const result = await Customer.create({ fname: fname, lname: lname, mobile: mobile})
+        const result = await Customer.create({ fname: fname, lname: lname, mobile: mobile, otp: code })
 
         // const token = jwt.sign({ email: result.email, id: result._id}, 'test', { expiresIn: "12h" })
 

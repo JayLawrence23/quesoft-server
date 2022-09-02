@@ -5,6 +5,7 @@ const customerSchema = mongoose.Schema({
     lname: { type: String, required: true },
     mobile: { type: String },
     email: { type: String },
+    otp: { type: String },
     transactionId: { type: String },
     status: {
         type: String,
