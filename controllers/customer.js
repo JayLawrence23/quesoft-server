@@ -67,13 +67,34 @@ export const monitorTicketByCode =  async(req, res) => {
     const { code, dname } = req.body;
 
     try {
-        const existingUser = await Transaction.findOne({ dname: dname, code: code });
+        const existingTrans = await Transaction.findOne({ code: code });
 
-        if(!existingUser) return res.status(404).json({ message: "Ticket doesn't exist. "})
+        if(!existingTrans) return res.status(404).json({ message: "Ticket doesn't exist. "})
 
-        await Transaction.findByIdAndUpdate(existingUser._id, { monitor: true } , { new: true });
+        await Transaction.findByIdAndUpdate(existingTrans._id, { monitor: true, dname: dname } , { new: true });
 
-        res.status(200).json(existingUser);
+        res.status(200).json(existingTrans);
+
+    } catch (error) {
+        res.status(500).json( {message: "Something went wrong. "});
+    }
+}
+
+export const signTicket =  async(req, res) => {
+    const { code, mobile } = req.body;
+
+    try {
+        const existingUser = await Customer.findOne({ mobile: mobile});
+
+        const existingTrans = await Transaction.findOne({ code: code });
+
+        if(!existingTrans) return res.status(404).json({ message: "Ticket doesn't exist. "});
+
+        await Transaction.findByIdAndUpdate(existingTrans._id, { monitor: true, dname: existingUser.fname, userId: existingUser._id } , { new: true });
+
+        await Customer.findByIdAndUpdate(existingUser._id, { currTicket: code } , { new: true });
+
+        res.status(200).json(existingTrans);
 
     } catch (error) {
         res.status(500).json( {message: "Something went wrong. "});

@@ -6,7 +6,7 @@ const customerSchema = mongoose.Schema({
     mobile: { type: String },
     email: { type: String },
     otp: { type: String },
-    transactionId: { type: String },
+    currTicket: { type: String },
     status: {
         type: String,
         default: 'Active'

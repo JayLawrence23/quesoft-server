@@ -5,6 +5,7 @@ import cron from 'node-cron'
 import Transaction from '../models/transactions.js';
 import Service from '../models/service.js';
 import Counter from '../models/counter.js'
+import Customer from '../models/customer.js';
 import { io } from '../index.js';
 import Admin from '../models/admin.js';
 
@@ -464,6 +465,13 @@ export const queuingComplete = async (req, res) => {
         const serviceTime = (current - called);
 
         const updatedTransaction = await Transaction.findByIdAndUpdate(id, { status: "Complete", predWait: null, serviceTime: serviceTime }, { new: true });
+
+        // to clear customer current ticket on their account
+        if(customer.userId) {
+            const user = await Customer.findById(customer.userId);
+
+            await Customer.findByIdAndUpdate(user._id, { currTicket: null }, { new: true });
+        }
 
         const transactionNext = await Transaction.findOne({ service: service, status: "Waiting", predWait: 1 });
 
