@@ -8,6 +8,8 @@ export const signin =  async(req, res) => {
     const { mobile } = req.body;
     const code = Math.floor(100000 + Math.random() * 900000);
 
+    console.log(mobile);
+
     try {
         const existingUser = await Customer.findOne({ mobile: mobile });
 
