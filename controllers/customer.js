@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 
 import Customer from '../models/customer.js'
@@ -7,8 +8,6 @@ import Transaction from '../models/transactions.js'
 export const signin =  async(req, res) => {
     const { mobile } = req.body;
     const code = Math.floor(100000 + Math.random() * 900000);
-
-    console.log(mobile);
 
     try {
         const existingUser = await Customer.findOne({ mobile: mobile });
@@ -139,3 +138,19 @@ export const getTransactions =  async(req, res) => {
         res.status(404).json( {message: error.message });
     }
 }
+
+export const updateCustomer = async (req, res) => {
+    const { id: _id } = req.params;
+    const { email, fname, lname, mobile } = req.body;
+  
+    if (!mongoose.Types.ObjectId.isValid(_id))
+      return res.status(404).send('No account with that id');
+      
+    const updatedCustomer = await Customer.findByIdAndUpdate(
+      _id,
+      { fname: fname.trim(), lname: lname.trim(), email: email.trim(), mobile: mobile.trim() },
+      { new: true }
+    );
+  
+    res.json(updatedCustomer);
+  };
