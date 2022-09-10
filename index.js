@@ -19,6 +19,10 @@ import path from 'path'
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
+// PDF
+import pdf from 'html-pdf'
+import pdfTemplate from './documents/index.js'
+
 import cron from 'node-cron'
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -117,6 +121,21 @@ export {io};
 //     })
 // }
 
+// POST - PDF Generation and fetching of the data
+app.post('/create-pdf', (req, res) => {
+    pdf.create(pdfTemplate(req.body), {}).toFile('reports.pdf', (err) => {
+        if(err){
+            res.send(Promise.reject());
+        }
+
+        res.send(Promise.resolve());
+    })
+})
+
+// GET - send the generated data to client
+app.get('/fetch-pdf', (req, res) => {
+    res.sendFile(`${__dirname}/reports.pdf`)
+})
 
 mongoose.connect(process.env.CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: true })
 .then(() => server.listen(PORT, () => console.log(`Server running on port: ${PORT}`)))
