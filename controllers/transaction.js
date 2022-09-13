@@ -790,7 +790,20 @@ export const averageServiceTime = async (req, res) => {
     }
 }
 
+// ######### Customer History of Transactions ##########
 
+export const customerHistory = async (req, res) => {
+    const { id } = req.body; 
+
+    try {
+
+        const history = await Transaction.find({ userId: id }).sort({ createdAt: -1 }).limit(5);
+
+        res.status(200).json(history)
+    } catch (error) {
+        res.status(404).json( {message: error.message });
+    }
+}
 
 
 // ######### Missed tickets ################

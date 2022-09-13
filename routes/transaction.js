@@ -27,7 +27,8 @@ import {
     serveMissedTicket,
     completeMissedTicket,
     averageServiceTime,
-    fetchTransactionsByCounter
+    fetchTransactionsByCounter,
+    customerHistory
 } from '../controllers/transaction.js'
 // import auth from '../middleware/auth.js'
 const router = express.Router();
@@ -70,4 +71,8 @@ router.post('/searchmissed', searchMissedByService);
 router.post('/servemissed', serveMissedTicket);
 router.post('/completemissed', completeMissedTicket);
 // router.patch('/:id/likePost', auth, likePost); // for liking the post
+
+// Customer history
+router.post('/customerhistory', customerHistory);
+
 export default router;
