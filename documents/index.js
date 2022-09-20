@@ -24,6 +24,9 @@ return `
              .justify-center {
              text-align: center;
              }
+             .title {
+               font-size: 22px;
+             }
              .invoice-box table {
              width: 100%;
              line-height: inherit;
@@ -86,29 +89,27 @@ return `
                    <td colspan="2">
                       <table>
                          <tr>
-                            <td class="title"><img  src="https://i2.wp.com/cleverlogos.co/wp-content/uploads/2018/05/reciepthound_1.jpg?fit=800%2C600&ssl=1"
-                               style="width:100%; max-width:156px;"></td>
-                            <td>
-                               Datum: ${`${today.getDate()}. ${today.getMonth() + 1}. ${today.getFullYear()}.`}
+                           <td class="title"><img src="https://i.ibb.co/dK3PKmb/logo-que.png" alt="logo-que" border="0"
+                              style="width:100%; max-width:106px;"></td>
+                           <td>
+                               Date: ${`${today.getDate()}. ${today.getMonth() + 1}. ${today.getFullYear()}.`}
                             </td>
                          </tr>
                       </table>
                    </td>
                 </tr>
                 <tr class="information">
-                   <td colspan="2">
-                      <table>
-                         <tr>
-                            <td>
-                               Customer name: ${name}
-                            </td>
-                            <td>
-                               Receipt number: ${receiptId}
-                            </td>
-                         </tr>
-                      </table>
-                   </td>
-                </tr>
+               <td colspan="2">
+                  <table>
+                     <tr>
+                        <td class="title">
+                           <b>Queuing System Reports</b>
+                        </td>
+                           
+                        </tr>
+                     </table>
+                  </td>
+               </tr>
                 <tr class="heading">
                    <td>Bought items:</td>
                    <td>Price</td>
