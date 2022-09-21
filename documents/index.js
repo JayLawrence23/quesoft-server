@@ -110,10 +110,17 @@ return `
                      </table>
                   </td>
                </tr>
-                <tr class="heading">
-                   <td>Bought items:</td>
-                   <td>Price</td>
-                </tr>
+               
+               <tr class="information">
+                  <td colspan="2">
+                     <b>Number of Visitors on the last 30 days</b>
+                  </td>
+               </tr>
+
+               <tr class="heading">
+                  <td>Services</td>
+                  <td>Volume</td>
+               </tr>
                 <tr class="item">
                    <td>First item:</td>
                    <td>${price1}$</td>
