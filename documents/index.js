@@ -27,6 +27,9 @@ return `
              .title {
                font-size: 22px;
              }
+             .section-title{
+               font-weight: bold;
+            }
              .invoice-box table {
              width: 100%;
              line-height: inherit;
@@ -111,24 +114,66 @@ return `
                   </td>
                </tr>
                
-               <tr class="information">
-                  <td colspan="2">
-                     <b>Number of Visitors on the last 30 days</b>
+               <tr>
+                     <td>
+                        <p class="section-title">Number of Visitors on the last 30 days</p>
+                     </td>
+                  </tr>
+
+               <tr>
+                  <td>
+                     <table>
+                        <tr class="heading">
+                           <td>Services</td>
+                           <td>Volume</td>
+                        </tr>
+         
+                           
+                        <tr class="item">
+                           <td>First item:</td>
+                           <td>${price1}$</td>
+                        </tr>
+                        <tr class="item">
+                           <td>Second item:</td>
+                           <td>${price1}$</td>
+                        </tr>
+                     </table>
+                  </td>
+               </tr>
+               
+               <tr>
+                     <td>
+                        <p class="section-title">Average Serving Time on the last 30 days</p>
+                     </td>
+                  </tr>
+               
+               
+               <tr>
+                  <td>
+                     <table>
+                        <tr class="heading">
+                           <td>Services</td>
+                           <td>Time</td>
+                        </tr>
+         
+                           
+                        <tr class="item">
+                           <td>First item:</td>
+                           <td>${price1}$</td>
+                        </tr>
+                        <tr class="item">
+                           <td>Second item:</td>
+                           <td>${price1}$</td>
+                        </tr>
+         
+                        <tr class="item">
+                           <td>Longest Service Time:</td>
+                           <td>${price1}$</td>
+                        </tr>
+                     </table>
                   </td>
                </tr>
 
-               <tr class="heading">
-                  <td>Services</td>
-                  <td>Volume</td>
-               </tr>
-                <tr class="item">
-                   <td>First item:</td>
-                   <td>${price1}$</td>
-                </tr>
-                <tr class="item">
-                   <td>Second item:</td>
-                   <td>${price2}$</td>
-                </tr>
              </table>
              <br />
              <h1 class="justify-center">Total price: ${parseInt(price1) + parseInt(price2)}$</h1>
