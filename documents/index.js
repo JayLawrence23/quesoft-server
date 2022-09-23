@@ -174,6 +174,18 @@ return `
                   </td>
                </tr>
 
+               
+               <tr>
+                  <td>
+                     <table>
+                        <tr class="heading">
+                              <td>Service that needs improvement:</td>
+                              <td>Customer Service</td>
+                        </tr>
+                     </table>
+                  </td>
+               </tr>
+
              </table>
              <br />
              <h1 class="justify-center">Total price: ${parseInt(price1) + parseInt(price2)}$</h1>
