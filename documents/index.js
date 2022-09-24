@@ -176,19 +176,18 @@ return `
 
                
                <tr>
-                  <td>
-                     <table>
-                        <tr class="heading">
-                              <td>Service that needs improvement:</td>
-                              <td>Customer Service</td>
-                        </tr>
-                     </table>
-                  </td>
+                  <table>
+                     <tr class="heading">
+                        <td>Service that needs improvement:</td>
+                        <td>Time</td>
+                     </tr>
+                  </table>
                </tr>
 
-             </table>
-             <br />
-             <h1 class="justify-center">Total price: ${parseInt(price1) + parseInt(price2)}$</h1>
+               
+            </table>
+            <br />
+            <h2 class="justify-center">Total volume on the last 30 days: 56541 <span class="changes">25% from last month</span></h2>
           </div>
        </body>
     </html>
