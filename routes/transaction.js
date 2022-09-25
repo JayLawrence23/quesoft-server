@@ -28,7 +28,9 @@ import {
     completeMissedTicket,
     averageServiceTime,
     fetchTransactionsByCounter,
-    customerHistory
+    customerHistory,
+    servedByAllServiceReports,
+    averageServiceTimeReports
 } from '../controllers/transaction.js'
 // import auth from '../middleware/auth.js'
 const router = express.Router();
@@ -74,5 +76,10 @@ router.post('/completemissed', completeMissedTicket);
 
 // Customer history
 router.post('/customerhistory', customerHistory);
+
+//Reports
+router.post('/servedallreports', servedByAllServiceReports);
+router.post('/aveservicetimereports', averageServiceTimeReports);
+
 
 export default router;

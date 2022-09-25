@@ -890,6 +890,72 @@ export const completeMissedTicket = async (req, res) => {
  
 // }
 
+// ############# REPORTS ###################
+
+
+export const servedByAllServiceReports = async (req, res) => {
+
+    let day =  new Date((new Date().getTime() - (30 * 24 * 60 * 60 * 1000)));
+
+    try {
+
+        const admin = await Admin.findOne({ username: "admin" });
+
+        const countServedByService = await Transaction.aggregate([
+            {
+                $match : { 
+                    business: admin.business, 
+                    createdAt: {  
+                        $gte: day,
+                    }
+                },
+            },
+            {
+                $group: {
+                    _id: "$service",
+                    count: { $sum: 1}
+                }
+            },
+        ])
+
+        res.status(200).json(countServedByService);
+    } catch (error) {
+        res.status(404).json( {message: error.message });
+    }
+}
+
+export const averageServiceTimeReports = async (req, res) => {
+    let day =  new Date((new Date().getTime() - (30 * 24 * 60 * 60 * 1000)));
+
+    try {
+
+        const admin = await Admin.findOne({ username: "admin" });
+
+        const averageServiceTime = await Transaction.aggregate([
+            {
+                $match : { 
+                    business: admin.business, 
+                    status: "Complete",
+                    createdAt: {  
+                        $gte: day,
+                    }  
+                }
+            },
+            {
+                $group: {
+                    _id: "$service",
+                    ave: { $avg: "$serviceTime"}
+                }
+            },
+        ])
+
+        res.status(200).json(averageServiceTime)
+    } catch (error) {
+        res.status(404).json( {message: error.message });
+    }
+}
+
+
 export const likePost = async (req, res) => {
     const { id } = req.params;
 
