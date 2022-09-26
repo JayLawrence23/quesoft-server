@@ -31,7 +31,8 @@ import {
     customerHistory,
     servedByAllServiceReports,
     averageServiceTimeReports,
-    volumeRateReports
+    volumeRateReports,
+    totalServedReports
 } from '../controllers/transaction.js'
 // import auth from '../middleware/auth.js'
 const router = express.Router();
@@ -82,6 +83,6 @@ router.post('/customerhistory', customerHistory);
 router.post('/servedallreports', servedByAllServiceReports);
 router.post('/aveservicetimereports', averageServiceTimeReports);
 router.post('/customerslastmonthreports', volumeRateReports);
-
+router.post('/totalservedreports', totalServedReports);
 
 export default router;

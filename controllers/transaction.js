@@ -989,6 +989,26 @@ export const volumeRateReports = async (req, res) => {
     }
 }
 
+export const totalServedReports = async (req, res) => {
+    let thisMonth =  new Date((new Date().getTime() - (30 * 24 * 60 * 60 * 1000)));
+
+    try {
+
+        const admin = await Admin.findOne({ username: "admin" });
+
+        const customerThismonth = await Transaction.countDocuments(
+            {
+                business: admin.business, 
+                createdAt: {  
+                    $gte: thisMonth
+                }  
+            })
+
+        res.status(200).json(customerThismonth)
+    } catch (error) {
+        res.status(404).json( {message: error.message });
+    }
+}
 
 export const likePost = async (req, res) => {
     const { id } = req.params;
