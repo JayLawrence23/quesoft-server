@@ -947,9 +947,43 @@ export const averageServiceTimeReports = async (req, res) => {
                     ave: { $avg: "$serviceTime"}
                 }
             },
-        ])
+        ]).sort({ "ave": -1 });
 
         res.status(200).json(averageServiceTime)
+    } catch (error) {
+        res.status(404).json( {message: error.message });
+    }
+}
+
+export const volumeRateReports = async (req, res) => {
+    let thisMonth =  new Date((new Date().getTime() - (30 * 24 * 60 * 60 * 1000)));
+    let lastMonth =  new Date((new Date().getTime() - (60 * 24 * 60 * 60 * 1000)));
+
+    try {
+
+        const admin = await Admin.findOne({ username: "admin" });
+
+        const customerLastmonth = await Transaction.countDocuments(
+            {
+                business: admin.business, 
+                status: "Complete",
+                createdAt: {  
+                    $gte: lastMonth,
+                    $lte: thisMonth
+                }  
+            })
+
+        const customerThismonth = await Transaction.countDocuments(
+            {
+                business: admin.business, 
+                createdAt: {  
+                    $gte: thisMonth
+                }  
+            })
+        
+        const volumeRate = ((customerThismonth / customerLastmonth) * 100) - 100;
+
+        res.status(200).json(volumeRate)
     } catch (error) {
         res.status(404).json( {message: error.message });
     }
