@@ -46,9 +46,18 @@ export default ({ ave, numberVisitor, rate, totalVolume }) => {
               font-size: 15px;
               color: green;
             }
+            .improvement{
+               background: #fdfdfd;
+               font-weight: bold;
+               margin-top: 2rem;
+            }
+            .improvement-rate{
+                  font-size: 13px;
+                  color: red;
+            }
             .section-title{
               font-weight: bold;
-           }
+            }
             .invoice-box table {
             width: 100%;
             line-height: inherit;
@@ -177,7 +186,7 @@ export default ({ ave, numberVisitor, rate, totalVolume }) => {
                  <table>
                     <tr class="heading">
                        <td>Service that needs improvement:</td>
-                       <td>Service</td>
+                       <td>Service  <span class="changes">${rate}% slower than the previous system</span></td>
                     </tr>
                  </table>
               </tr>
