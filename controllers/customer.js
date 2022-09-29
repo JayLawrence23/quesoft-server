@@ -5,6 +5,16 @@ import jwt from 'jsonwebtoken';
 import Customer from '../models/customer.js'
 import Transaction from '../models/transactions.js'
 
+//SMS Notification
+import dotenv from 'dotenv';
+import twilio from 'twilio';
+
+dotenv.config();
+const accountSid = process.env.TWILIO_ACCOUNT_SID; 
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+const client = twilio(accountSid, authToken);
+
 export const signin =  async(req, res) => {
     const { mobile } = req.body;
     const code = Math.floor(100000 + Math.random() * 900000);
@@ -19,6 +29,16 @@ export const signin =  async(req, res) => {
         // if(!isPasswordCorrect) return res.status(404).json({ message: "Invalid credentials. "})
 
         await Customer.findByIdAndUpdate(existingUser._id, { otp: code } , { new: true });
+
+        client.messages 
+        .create({
+        from: '+16075369068',         
+        to: contact,
+        body: `${ticketNo} - OTP: ${code}`,
+        messagingServiceSid: messagingServiceSid,
+        }) 
+        .then(() => console.log('Message sent!')) 
+        .catch((err) => console.log(err));
 
         // const token = jwt.sign({ email: existingUser.email, id: existingUser._id}, 'test', { expiresIn: "1h" })
 
@@ -116,6 +136,16 @@ export const signup = async (req, res) => {
 
         // const token = jwt.sign({ email: result.email, id: result._id}, 'test', { expiresIn: "12h" })
 
+        client.messages 
+        .create({
+        from: '+16075369068',         
+        to: contact,
+        body: `${ticketNo} - OTP: ${code}`,
+        messagingServiceSid: messagingServiceSid,
+        }) 
+        .then(() => console.log('Message sent!')) 
+        .catch((err) => console.log(err));
+        
         res.status(200).json(result);
 
     } catch (error) {
